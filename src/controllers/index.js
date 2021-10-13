@@ -103,26 +103,33 @@ const download = async (req, res, next) => {
     if (type == "playlist") {
       const response = await ZingMp3.getDetailPlaylist(id);
 
-      if (!response) {
-        throw new Error("Server error!");
-      }
-
       const songList = response.song.items;
+
       if (query === "128") {
-        let result = [];
-        for (let i = 0; i < songList.length; i++) {
-          let tempLink = await ZingMp3.getStreaming(songList[i].encodeId);
-          let temp = {
-            title: songList[i].title,
-            artistsNames: songList[i].artistsNames,
-            link: tempLink["128"],
-          };
-          result.push(temp);
+        try {
+          let result = [];
+          for (let i = 0; i < songList.length; i++) {
+            let tempLink = await ZingMp3.getStreaming(songList[i].encodeId);
+
+            if (tempLink) {
+              let temp = {
+                title: songList[i].title,
+                artistsNames: songList[i].artistsNames,
+                link: tempLink["128"],
+              };
+              result.push(temp);
+            }
+          }
+          console.log(result.length);
+
+          return res.json({
+            success: true,
+            data: result,
+          });
+        } catch (e) {
+          console.log(e);
+          next(e);
         }
-        return res.json({
-          success: true,
-          data: result,
-        });
       }
 
       if (query === "320") {
